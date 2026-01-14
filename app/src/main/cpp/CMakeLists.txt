@@ -9,11 +9,13 @@ project("novelreadernative")
 set(CMAKE_CXX_STANDARD 20)
 set(VCPKG_ANDROID $ENV{VCPKG_ANDROID})
 
+# INCLUDE Folders
 include_directories(
     ${VCPKG_ANDROID}/include
     ${CMAKE_SOURCE_DIR}/include
 )
 
+# Files
 file(GLOB LIBRARY_FILES
     ${VCPKG_ANDROID}/lib/libuchardet.a
     ${VCPKG_ANDROID}/lib/libicudata.a
@@ -34,6 +36,7 @@ file(GLOB JNI_FILES
     ${CMAKE_SOURCE_DIR}/jni/NativeHelper.cpp
 )
 
+# define target
 add_library(${CMAKE_PROJECT_NAME} SHARED
     ${HEADER_FILES}
     ${SOURCE_FILES}
