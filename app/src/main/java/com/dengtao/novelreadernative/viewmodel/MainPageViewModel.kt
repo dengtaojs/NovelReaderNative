@@ -9,15 +9,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import java.io.FileInputStream
-import java.io.StringReader
 import java.nio.ByteBuffer
 
 class MainPageViewModel(application: Application)
     : AndroidViewModel(application)
 {
-    var allLines = listOf<String>()
-        private set
-
+    val fileContent = MutableStateFlow("文件内容")
+    val executeTime = MutableStateFlow("运行时间")
 
 
     suspend fun openFileAsync(context: Context, uri: Uri)
@@ -31,7 +29,8 @@ class MainPageViewModel(application: Application)
                 channel.read(buffer)
                 buffer.flip()
                 val content = NativeHelper.getStringFromByteBuffer(buffer)
-                val reader = StringReader(content);
+                buffer.clear();
+                fileContent.value = content.take(5000)
             }
         }
 

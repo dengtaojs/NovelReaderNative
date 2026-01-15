@@ -1,6 +1,6 @@
 #include <jni.h>
-#include "TextTools.h"
-#include "U16Decoder.h"
+#include "CharsetDetector.h"
+#include "UnicodeConverter.h"
 
 extern "C"
 JNIEXPORT jstring JNICALL
@@ -11,14 +11,21 @@ Java_com_dengtao_novelreadernative_jni_NativeHelper_getStringFromByteBuffer(
 {
     // 1. 获取 buffer 的地址和长度
     const char* data = reinterpret_cast<char*>(env->GetDirectBufferAddress(buffer));
-    size_t size = static_cast<size_t>(env->GetDirectBufferCapacity(buffer));
+    auto size = static_cast<size_t>(env->GetDirectBufferCapacity(buffer));
 
-    // 2. 开始转换成 utf16 字符串
-    novel::U16Decoder decoder;
-    std::u16string result = decoder.toUtf16(data, size);
+    // 2. 获取编码名
+    std::string charset = novel::detectEncoding(data, size);
 
-    // 3. 将 utf16 字符串指针转换成 jchar*
-    return env->NewString(
-        reinterpret_cast<const jchar*>(result.c_str()),
-        static_cast<jsize>(result.size()));
+    try{
+        // 3. 获取 utf-16 字符串
+        novel::UnicodeConverter unicodeConverter { charset };
+        std::u16string result = unicodeConverter.toUtf16(data, size);
+        return env->NewString(
+            reinterpret_cast<const jchar*>(result.c_str()), static_cast<jsize>(result.size())
+        );
+    }
+    catch (std::exception const& exception) {
+        std::string errorMessage {exception.what()};
+        return env->NewStringUTF(errorMessage.c_str());
+    }
 }

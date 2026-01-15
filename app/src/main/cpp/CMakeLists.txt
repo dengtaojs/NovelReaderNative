@@ -7,29 +7,29 @@ cmake_minimum_required(VERSION 3.22.1)
 project("novelreadernative")
 
 set(CMAKE_CXX_STANDARD 20)
-set(VCPKG_ANDROID $ENV{VCPKG_ANDROID})
+set(ARM64_ANDROID $ENV{ARM64_ANDROID})
 
 # INCLUDE Folders
 include_directories(
-    ${VCPKG_ANDROID}/include
+    ${ARM64_ANDROID}/include
     ${CMAKE_SOURCE_DIR}/include
 )
 
 # Files
 file(GLOB LIBRARY_FILES
-    ${VCPKG_ANDROID}/lib/libuchardet.a
-    ${VCPKG_ANDROID}/lib/libicudata.a
-    ${VCPKG_ANDROID}/lib/libicuuc.a
+    ${ARM64_ANDROID}/lib/libuchardet.a
+    ${ARM64_ANDROID}/lib/libced.a
+    ${ARM64_ANDROID}/lib/libicuuc.a
 )
 
 file(GLOB HEADER_FILES
-    ${CMAKE_SOURCE_DIR}/include/TextTools.h
-    ${CMAKE_SOURCE_DIR}/include/U16Decoder.h
+    ${CMAKE_SOURCE_DIR}/include/CharsetDetector.h
+    ${CMAKE_SOURCE_DIR}/include/UnicodeConverter.h
 )
 
 file(GLOB SOURCE_FILES
-    ${CMAKE_SOURCE_DIR}/source/TextTools.cpp
-    ${CMAKE_SOURCE_DIR}/source/U16Decoder.cpp
+    ${CMAKE_SOURCE_DIR}/source/CharsetDetector.cpp
+    ${CMAKE_SOURCE_DIR}/source/UnicodeConverter.cpp
 )
 
 file(GLOB JNI_FILES
