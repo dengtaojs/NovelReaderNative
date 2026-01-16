@@ -15,7 +15,6 @@ namespace novel
     {
     public:
         explicit NovelData(std::u16string const&  fileContent);
-
         std::u16string getChapterContent(size_t index) const;
         std::u16string getTitle(size_t index) const;
 

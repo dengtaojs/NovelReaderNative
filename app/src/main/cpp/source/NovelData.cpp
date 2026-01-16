@@ -4,7 +4,7 @@
 
 #include "NovelData.h"
 #include <unicode/regex.h>
-#include <unicode/ustring.h>
+#include <unicode/unistr.h>
 
 void* novel::NovelData::titileRegex { nullptr };
 std::shared_ptr<novel::NovelData> novel::NovelData::current { nullptr };
@@ -26,6 +26,9 @@ namespace novel
     NovelData::NovelData(const std::u16string& fileContent)
             : m_fileContent{ std::move(fileContent) }
     {
+        icu::UnicodeString s1 { u"hekko"};
+        icu::UnicodeString s2 { std::move(s1) };
+
     }
 
     void NovelData::splitNovel()
@@ -65,7 +68,7 @@ namespace novel
                 }
             }
 
-            startPos += subStrSize > 12 ? (subStrSize - 12) : 1;
+            startPos += subStrSize;
         }
     }
 
