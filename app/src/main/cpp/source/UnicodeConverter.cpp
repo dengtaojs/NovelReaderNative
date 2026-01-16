@@ -8,13 +8,13 @@
 
 namespace novel
 {
-    UnicodeConverter::UnicodeConverter(const std::string &srcCharset)
+    UnicodeConverter::UnicodeConverter(const std::string& srcCharset)
     {
         UErrorCode errorCode = UErrorCode::U_ZERO_ERROR;
         m_converter = ucnv_open(srcCharset.c_str(), &errorCode);
 
         if (U_FAILURE(errorCode)) {
-            throw std::runtime_error(srcCharset + " is not supported.");
+            throw std::runtime_error("错误：不支持的字符集名称" + srcCharset);
         }
     }
 
@@ -26,19 +26,16 @@ namespace novel
         }
     }
 
-    std::u16string UnicodeConverter::toUtf16(const char *data, size_t size)
+    std::u16string UnicodeConverter::toUtf16(const char* data, int32_t srcSize) const
     {
         UErrorCode errorCode = UErrorCode::U_ZERO_ERROR;
-        auto converter = static_cast<UConverter *>(m_converter);
+        auto converter = static_cast<UConverter*>(m_converter);
 
-        // calculate u16string size
-        int32_t srcSize = static_cast<int32_t>(size);
         int32_t sizeNeeded = ucnv_toUChars(converter, nullptr, 0, data, srcSize, &errorCode);
-        if (errorCode != UErrorCode::U_BUFFER_OVERFLOW_ERROR){
-            return std::u16string {};
+        if (errorCode != UErrorCode::U_BUFFER_OVERFLOW_ERROR) {
+            return std::u16string { };
         }
 
-        // construct result
         errorCode = UErrorCode::U_ZERO_ERROR;
         ++sizeNeeded;
         std::u16string result(sizeNeeded, u'\0');
@@ -47,6 +44,11 @@ namespace novel
         if (U_SUCCESS(errorCode)) {
             return result;
         }
-        return std::u16string {};
+        return std::u16string { };
+    }
+
+    std::u16string UnicodeConverter::toUtf16(const std::string& text) const
+    {
+        return this->toUtf16(text.c_str(), static_cast<int32_t>(text.size()));
     }
 } // novel

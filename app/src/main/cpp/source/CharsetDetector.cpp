@@ -3,22 +3,36 @@
 //
 
 #include "CharsetDetector.h"
-#include <compact_enc_det/compact_enc_det.h>
+#include <uchardet/uchardet.h>
 
 namespace novel
 {
-    // TODO 需要调试
-    // 编译失败
-    std::string detectEncoding(const char *data, int len)
+    CharsetDetector::CharsetDetector()
     {
-        bool isReliable { false };
-        int bytesConsumed { 0 };
+        m_detector = uchardet_new();
+    }
 
-        Encoding encoding = CompactEncDet::DetectEncoding(
-                data, len, nullptr, nullptr, nullptr, Encoding::CHINESE_GB, Language::CHINESE,
-                CompactEncDet::WEB_CORPUS, false, &bytesConsumed, &isReliable);
+    CharsetDetector::~CharsetDetector()
+    {
+        if (m_detector) {
+            uchardet_delete(static_cast<uchardet_t>(m_detector));
+        }
+    }
 
-        auto name = EncodingName(encoding);
-        return std::string {name};
+    std::string CharsetDetector::getCharset(const char* data, int32_t size) const
+    {
+        auto detector = static_cast<uchardet_t>(m_detector);
+
+        uchardet_reset(detector);
+        uchardet_handle_data(detector, data, size);
+        uchardet_data_end(detector);
+
+        std::string charset { uchardet_get_charset(detector) };
+        return charset;
+    }
+
+    std::string CharsetDetector::getCharset(const std::string& text) const
+    {
+        return this->getCharset(text.c_str(), static_cast<int32_t>(text.size()));
     }
 } // novel

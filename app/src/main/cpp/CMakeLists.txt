@@ -18,22 +18,27 @@ include_directories(
 # Files
 file(GLOB LIBRARY_FILES
     ${ARM64_ANDROID}/lib/libuchardet.a
-    ${ARM64_ANDROID}/lib/libced.a
+    ${ARM64_ANDROID}/lib/libicudata.a
     ${ARM64_ANDROID}/lib/libicuuc.a
+    ${ARM64_ANDROID}/lib/libicui18n.a
 )
 
 file(GLOB HEADER_FILES
     ${CMAKE_SOURCE_DIR}/include/CharsetDetector.h
     ${CMAKE_SOURCE_DIR}/include/UnicodeConverter.h
+    ${CMAKE_SOURCE_DIR}/include/Chapter.h
+    ${CMAKE_SOURCE_DIR}/include/NovelData.h
 )
 
 file(GLOB SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/source/CharsetDetector.cpp
     ${CMAKE_SOURCE_DIR}/source/UnicodeConverter.cpp
+    ${CMAKE_SOURCE_DIR}/source/Chapter.cpp
+    ${CMAKE_SOURCE_DIR}/source/NovelData.cpp
 )
 
 file(GLOB JNI_FILES
-    ${CMAKE_SOURCE_DIR}/jni/NativeHelper.cpp
+    ${CMAKE_SOURCE_DIR}/jni/NovelDataHelper.cpp
 )
 
 # define target

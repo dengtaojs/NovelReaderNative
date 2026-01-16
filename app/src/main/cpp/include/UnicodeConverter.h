@@ -16,8 +16,8 @@ namespace novel
         explicit UnicodeConverter(std::string const& srcCharset);
         ~UnicodeConverter();
 
-        std::u16string toUtf16(const char* data, size_t size);
-        std::u16string toUtf16(const std::string& text);
+        std::u16string toUtf16(const char* data, int32_t srcSize) const;
+        std::u16string toUtf16(const std::string& text) const;
 
     private:
         void* m_converter {nullptr};
