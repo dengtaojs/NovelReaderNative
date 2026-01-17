@@ -14,8 +14,10 @@ import java.nio.ByteBuffer
 class MainPageViewModel(application: Application)
     : AndroidViewModel(application)
 {
-    val chapterContent = MutableStateFlow("章内容")
+    val chapterTitle = MutableStateFlow("章标题")
+    val chapterText = MutableStateFlow("章内容")
     val executeTime = MutableStateFlow("执行时间")
+    var totalChapters = 0
     var chaptersCount = 0
     var index = 0;
 
@@ -31,16 +33,28 @@ class MainPageViewModel(application: Application)
                 channel.read(buffer)
                 buffer.flip()
                 val t1 = System.currentTimeMillis()
+                totalChapters = NovelDataHelper.create(buffer);
+                buffer.clear();
 
-                if (NovelDataHelper.create(buffer)) {
-                    chaptersCount = NovelDataHelper.findTitlePositions()
-                    if (chaptersCount > 0) {
-                        val t2 = System.currentTimeMillis()
-                        chapterContent.value = NovelDataHelper.getChapterContent(0)
-                        executeTime.value = "Kotlin 中用时：${t1 - t0} ms， C++ 中用时: ${t2 - t1} ms"
-                    }
+                if (totalChapters > 0) {
+                    val t2 = System.currentTimeMillis()
+                    updateTitleAndText(0)
+                    executeTime.value = "Kotlin 中用时：${t1 - t0} ms， C++ 中用时: ${t2 - t1} ms"
                 }
             }
+        }
+    }
+
+    fun updateTitleAndText(index: Int)
+    {
+        val fullContent = NovelDataHelper.getContent(index)
+        if (fullContent.isEmpty()) {
+            chapterText.value = ""
+            chapterTitle.value = ""
+        } else {
+            val lineBreakPos = fullContent.indexOfFirst { c-> c == '\n' || c == '\r' }
+            chapterTitle.value = fullContent.substring(0..< lineBreakPos).trimEnd()
+            chapterText.value = fullContent.substring(lineBreakPos + 1).trimStart()
         }
     }
 
@@ -48,14 +62,16 @@ class MainPageViewModel(application: Application)
     {
         if (index == 0) return
         --index
-        chapterContent.value = NovelDataHelper.getChapterContent(index)
+        chapterTitle.value = NovelDataHelper.getTitle(index);
+        chapterText.value = NovelDataHelper.getText(index)
     }
 
     fun readNext()
     {
         if (index == chaptersCount - 1) return
         ++index
-        chapterContent.value = NovelDataHelper.getChapterContent(index)
+        chapterText.value = NovelDataHelper.getText(index)
+        chapterTitle.value = NovelDataHelper.getTitle(index);
     }
 
     fun delete()

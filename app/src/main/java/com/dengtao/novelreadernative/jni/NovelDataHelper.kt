@@ -7,7 +7,7 @@ object NovelDataHelper
     /**
      * 根据字节数组，创建一个新的对象。c++ 中始终只有一个 NovelData 对象。
      */
-    external fun create(buffer: ByteBuffer) : Boolean
+    external fun create(buffer: ByteBuffer) : Int
 
     /**
      * 删除 c++ 中的 NovelData 对象。
@@ -15,14 +15,15 @@ object NovelDataHelper
     external fun delete()
 
     /**
-     * 查找所有的标题位置。
-     * @return 返回章的数量。
+     * 获取章的全部内容，不包括标题。
      */
-    external fun findTitlePositions() : Int
+    external fun getText(index: Int) : String
 
     /**
-     * 获取章的全部内容，包括标题。
+     * 获取章的标题。
      */
-    external fun getChapterContent(index: Int) : String
+    external fun getTitle(index: Int) : String
+
+    external fun getContent(index: Int) : String
 
 }

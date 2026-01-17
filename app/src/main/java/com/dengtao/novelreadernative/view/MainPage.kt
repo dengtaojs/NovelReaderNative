@@ -13,12 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowLeft
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
-import androidx.compose.material.icons.filled.ArrowLeft
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,8 +38,9 @@ import kotlinx.coroutines.launch
 fun MainPage(innerPadding: PaddingValues)
 {
     val vm: MainPageViewModel = viewModel()
-    val chapterContent by vm.chapterContent.collectAsStateWithLifecycle()
+    val chapterText by vm.chapterText.collectAsStateWithLifecycle()
     val executeTime by vm.executeTime.collectAsStateWithLifecycle()
+    val chapterTitle by vm.chapterTitle.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val readerRegionScrollState = rememberScrollState()
 
@@ -93,11 +90,17 @@ fun MainPage(innerPadding: PaddingValues)
             style = MaterialTheme.typography.labelSmall
         )
 
+        Text(
+            text = chapterTitle,
+            maxLines = 2,
+            style = MaterialTheme.typography.titleLarge
+        )
+
         HorizontalDivider()
 
         Box(Modifier.fillMaxSize().weight(1f).verticalScroll(readerRegionScrollState)) {
             Text(
-                text = chapterContent,
+                text = chapterText,
                 lineHeight = 1.2.em,
                 style = MaterialTheme.typography.bodyLarge
             )

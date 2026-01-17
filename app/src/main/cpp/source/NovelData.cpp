@@ -41,6 +41,7 @@ namespace novel
             startPos = actualSize;
         }
 
+        m_titlePositions.push_back(0);
         for(task_type& task : tasks) {
             auto result = task.get();
             for(size_t pos : result) {
@@ -50,27 +51,19 @@ namespace novel
         std::sort(m_titlePositions.begin(), m_titlePositions.end());
     }
 
-    std::u16string NovelData::getChapterContent(size_t index) const
+    std::u16string NovelData::getText(size_t index) const
     {
         if (index >= m_titlePositions.size()) {
             return {};
         }
 
         size_t startPos = m_titlePositions[index];
-
-        if (index + 1 == m_titlePositions.size()) {
-            return m_fileContent.substr(startPos);
-        }
-        else {
-            size_t endPos = m_titlePositions[index + 1];
-            return m_fileContent.substr(startPos, endPos - startPos);
-        }
+        size_t endPos = (index + 1 >= m_titlePositions.size()) ? m_fileContent.size() : m_titlePositions[index + 1];
+        size_t textStartPos = m_fileContent.find_first_of(u"\r\n", startPos) + 2;
+        std::u16string text = m_fileContent.substr(textStartPos, endPos - textStartPos);
+        return text;
     }
 
-    int32_t NovelData::size() const
-    {
-        return static_cast<int32_t>(m_titlePositions.size());
-    }
 
     std::u16string NovelData::getTitle(size_t index) const
     {
@@ -79,17 +72,9 @@ namespace novel
         }
 
         size_t startPos = m_titlePositions[index];
-        size_t endPos = startPos + 1;
-
-        while (endPos < m_fileContent.size()) {
-            char16_t c = m_fileContent[endPos];
-            if (c == u'\r' || c == u'\n') {
-                break;
-            }
-            ++endPos;
-        }
-
-        return m_fileContent.substr(startPos, endPos - startPos);
+        size_t titleEndPos = m_fileContent.find_first_of(u"\r\n", startPos);
+        std::u16string title = m_fileContent.substr(startPos, titleEndPos - startPos);
+        return title;
     }
 
     std::vector<size_t> NovelData::splitBlock(size_t startPos, size_t len)
@@ -107,5 +92,17 @@ namespace novel
 
         delete matcher;
         return result;
+    }
+
+    std::u16string NovelData::getContent(size_t index) const {
+        if (index >= m_titlePositions.size()) {
+            return {};
+        }
+
+        size_t startPos = m_titlePositions[index];
+        size_t endPos = (index + 1 >= m_titlePositions.size()) ? m_fileContent.size() : m_titlePositions[index + 1];
+        std::u16string chapterFullText = m_fileContent.substr(startPos, endPos);
+
+        return chapterFullText;
     }
 }
