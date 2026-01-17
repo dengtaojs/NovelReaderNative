@@ -24,17 +24,13 @@ file(GLOB LIBRARY_FILES
 )
 
 file(GLOB HEADER_FILES
-    ${CMAKE_SOURCE_DIR}/include/CharsetDetector.h
-    ${CMAKE_SOURCE_DIR}/include/UnicodeConverter.h
-    ${CMAKE_SOURCE_DIR}/include/Chapter.h
     ${CMAKE_SOURCE_DIR}/include/NovelData.h
+    ${CMAKE_SOURCE_DIR}/include/XwTools.h
 )
 
 file(GLOB SOURCE_FILES
-    ${CMAKE_SOURCE_DIR}/source/CharsetDetector.cpp
-    ${CMAKE_SOURCE_DIR}/source/UnicodeConverter.cpp
-    ${CMAKE_SOURCE_DIR}/source/Chapter.cpp
     ${CMAKE_SOURCE_DIR}/source/NovelData.cpp
+    ${CMAKE_SOURCE_DIR}/source/XwTools.cpp
 )
 
 file(GLOB JNI_FILES

@@ -3,73 +3,51 @@
 //
 
 #include "NovelData.h"
+#include "XwTools.h"
+#include <future>
 #include <unicode/regex.h>
 #include <unicode/unistr.h>
 
-void* novel::NovelData::titileRegex { nullptr };
 std::shared_ptr<novel::NovelData> novel::NovelData::current { nullptr };
-
-template<typename T>
-T MY_MAX(T v1, T v2)
-{
-    return (v1 >= v2) ? v1 : v2;
-}
-
-template<typename T>
-T MY_MIN(T v1, T v2)
-{
-    return (v1 <= v2) ? v1 : v2;
-}
+void* novel::NovelData::titleRegexPattern { nullptr };
 
 namespace novel
 {
     NovelData::NovelData(const std::u16string& fileContent)
             : m_fileContent{ std::move(fileContent) }
     {
-        icu::UnicodeString s1 { u"hekko"};
-        icu::UnicodeString s2 { std::move(s1) };
-
+        if (titleRegexPattern == nullptr) {
+            UParseError parseError;
+            UErrorCode errorCode = UErrorCode::U_ZERO_ERROR;
+            icu::UnicodeString titleRegex {uR"(第[\s\d一二三四五六七八九十零百千万]+章)"};
+            titleRegexPattern = icu::RegexPattern::compile(titleRegex, parseError, errorCode);
+        }
     }
 
     void NovelData::splitNovel()
     {
-        UErrorCode errorCode = UErrorCode::U_ZERO_ERROR;
+        using task_type = std::future<std::vector<size_t>>;
+        std::vector<task_type> tasks;
 
-        if (titileRegex == nullptr) {
-            UParseError parseError;
-            titileRegex = icu::RegexPattern::compile(
-                    uR"(第\s?[\d一二三四五六七八九十零百千万]+\s?章)", parseError, errorCode);
-        }
-
-        auto titlePattern = static_cast<icu::RegexPattern*>(titileRegex);
-
-        size_t startPos = 0;
+        constexpr size_t BLOCK_SIZE { 512 * 1024 };
         size_t remainSize = m_fileContent.size();
+        size_t startPos = 0;
 
-        m_titlePositions.push_back(0);
-        constexpr size_t BLOCK_SIZE {512 * 1024};
+        while(remainSize > 0) {
+            size_t actualSize = xw::minOf(BLOCK_SIZE, remainSize);
+            remainSize -= actualSize;
 
-        while (remainSize > 0) {
-            size_t subStrSize = MY_MIN (BLOCK_SIZE, remainSize);
-            remainSize -= subStrSize;
-
-            std::u16string subStr = m_fileContent.substr(startPos, subStrSize);
-
-            errorCode = UErrorCode::U_ZERO_ERROR;
-            icu::RegexMatcher* matcher = titlePattern->matcher(subStr, errorCode);
-            if (U_FAILURE(errorCode)) {
-                break;
-            }
-
-            while (matcher->find() && U_SUCCESS(errorCode)) {
-                size_t start = matcher->start(errorCode) + startPos;
-                if (start != 0) {
-                    m_titlePositions.push_back(start);
-                }
-            }
-
-            startPos += subStrSize;
+            tasks.push_back(std::async(std::launch::async, &NovelData::splitBlock, this, startPos, actualSize));
+            startPos = actualSize;
         }
+
+        for(task_type& task : tasks) {
+            auto result = task.get();
+            for(size_t pos : result) {
+                m_titlePositions.push_back(pos);
+            }
+        }
+        std::sort(m_titlePositions.begin(), m_titlePositions.end());
     }
 
     std::u16string NovelData::getChapterContent(size_t index) const
@@ -112,5 +90,22 @@ namespace novel
         }
 
         return m_fileContent.substr(startPos, endPos - startPos);
+    }
+
+    std::vector<size_t> NovelData::splitBlock(size_t startPos, size_t len)
+    {
+        std::vector<size_t> result;
+        UErrorCode errorCode = UErrorCode::U_ZERO_ERROR;
+
+        auto pattern = (icu::RegexPattern*)titleRegexPattern;
+        icu::UnicodeString input { m_fileContent.substr(startPos, len) };
+        auto matcher = pattern->matcher(input, errorCode);
+
+        while (matcher->find() && U_SUCCESS(errorCode)) {
+            result.push_back(startPos + matcher->start(errorCode));
+        }
+
+        delete matcher;
+        return result;
     }
 }

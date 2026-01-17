@@ -14,6 +14,9 @@ namespace novel
     class NovelData
     {
     public:
+        static std::shared_ptr<NovelData> current;
+        static void* titleRegexPattern;
+
         explicit NovelData(std::u16string const&  fileContent);
         std::u16string getChapterContent(size_t index) const;
         std::u16string getTitle(size_t index) const;
@@ -21,11 +24,9 @@ namespace novel
         int32_t size() const;
         void splitNovel();
 
-    public:
-        static std::shared_ptr<NovelData> current;
 
     private:
-        static void* titileRegex;
+        std::vector<size_t> splitBlock(size_t startPos, size_t len);
 
         std::u16string m_fileContent;
         std::vector<size_t> m_titlePositions;

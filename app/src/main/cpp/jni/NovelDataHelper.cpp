@@ -3,35 +3,38 @@
 //
 #include <jni.h>
 #include "NovelData.h"
-#include "CharsetDetector.h"
-#include "UnicodeConverter.h"
+#include "XwTools.h"
 
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_dengtao_novelreadernative_jni_NovelDataHelper_create(
         JNIEnv* env, jobject thiz, jobject buffer)
 {
+    bool result {false};
+    std::u16string fileContent;
+
     // 1. 获取 buffer 的地址和长度
     const char* data = reinterpret_cast<char*>(env->GetDirectBufferAddress(buffer));
-    auto srcSize = static_cast<int32_t>(env->GetDirectBufferCapacity(buffer));
+    auto dataLength = static_cast<int32_t>(env->GetDirectBufferCapacity(buffer));
 
     // 2. 获取编码名
-    novel::CharsetDetector charsetDetector;
-    std::string charset = charsetDetector.getCharset(data, srcSize);
-
-    try {
-        // 3. 获取 utf-16 字符串
-        novel::UnicodeConverter unicodeConverter { charset };
-        std::u16string result = unicodeConverter.toUtf16(data, srcSize);
-
-        // 4. 创建 NovelData 对象
-        novel::NovelData::current = std::make_shared<novel::NovelData>(result);
-        return true;
-
+    std::string charset = xw::detectCharset(data, dataLength);
+    if (charset.empty()) {
+        goto END;
     }
-    catch (std::exception const&) {
-        return false;
+
+    // 3. 执行转换
+    fileContent = xw::toUtf16(data, dataLength, charset);
+    if (charset.empty()) {
+        goto END;
     }
+
+    // 4. 创建 ChapterData 对象
+    novel::NovelData::current = std::make_shared<novel::NovelData>(fileContent);
+    result = true;
+
+END:
+    return result;
 }
 
 extern "C"
@@ -51,9 +54,7 @@ Java_com_dengtao_novelreadernative_jni_NovelDataHelper_findTitlePositions(JNIEnv
         novel::NovelData::current->splitNovel();
         return novel::NovelData::current->size();
     }
-    else {
-        return 0;
-    }
+    return 0;
 }
 
 
@@ -65,9 +66,9 @@ Java_com_dengtao_novelreadernative_jni_NovelDataHelper_getChapterContent(
     if (novel::NovelData::current != nullptr) {
         std::u16string text { novel::NovelData::current->getChapterContent(index) };
         return env->NewString(
-                reinterpret_cast<const jchar*>(text.c_str()),static_cast<jsize>(text.size()));
+                reinterpret_cast<const jchar*>(text.c_str()),
+                static_cast<jsize>(text.size())
+        );
     }
-    else {
-        return env->NewStringUTF("");
-    }
+    return env->NewStringUTF("");
 }
